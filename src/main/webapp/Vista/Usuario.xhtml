@@ -1,0 +1,197 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"    
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <h:head>
+        <title>Mantenimiento Usuario</title>
+        <h:outputStylesheet name="primeicons/primeicons.css" library="primefaces" />
+    </h:head>
+    <h:body>
+        <p:growl id="mensaje" severity="info,fatal" showSummary="true" showDetail="true"/>
+        <p:menubar>
+            <p:menuitem value="Area" url="/SistCom_Maven/faces/Vista/Area.xhtml"/>
+            <p:menuitem value="Marca" url="/SistCom_Maven/faces/Vista/Marca.xhtml"/>
+            <p:menuitem value="Usuario" url="/SistCom_Maven/faces/Vista/Usuario.xhtml"/>
+            <p:menuitem value="Material" url="/SistCom_Maven/faces/Vista/Material.xhtml"/>
+            <p:menuitem value="Asignacion de Material" url="/SistCom_Maven/faces/Vista/Asignacion.xhtml"/>          
+            <p:menuitem value="Inventario" url="/SistCom_Maven/faces/Vista/Inventario.xhtml"/>
+        </p:menubar>
+        <h:form id="tablaUsu">
+
+            <p:panelGrid columns="6" > 
+                <p:outputLabel value="Nombre" />
+                <p:inputText  id="nombre" required="true" maxlength="50" value="#{usuarioC.usuarioDTO.NOMUSU}" label="NOMBRE REPETIDO" requiredMessage="Ingresar Nombre" style="width: 200px">
+                    <f:ajax event="keyup" execute="@this" delay="500"/>
+                    <p:keyFilter regEx="/[A-Z_a-z_ñ_á_é_í_ó_ú_ ]/"/>
+                    <f:validator validatorId="UsuarioDuplicado"/>
+                </p:inputText>
+
+                <p:outputLabel value="Area" />
+                <p:selectOneMenu id="area" value="#{usuarioC.usuarioDTO.IDARE}"
+                                 filter="true" filterMatchMode="contains" required="true" requiredMessage="Falta Area" >
+                    <f:selectItem  noSelectionOption="true" itemLabel="Seleccione" itemValue="#{null}" />
+                    <f:selectItems value="#{areaC.listare}" var="area" itemValue="#{area.IDARE}"
+                                   itemLabel="#{area.NOMARE}"/>                                  
+                </p:selectOneMenu> 
+
+                <p:outputLabel value="DNI" />
+                <p:inputText  id="dni" required="true" maxlength="8" value="#{usuarioC.usuarioDTO.DNIUSU}" label="NOMBRE REPETIDO" requiredMessage="Ingresar Nombre" style="width: 200px">
+                    <f:ajax event="keyup" execute="@this" delay="500"/>
+                    <p:keyFilter regEx="/[0-9]/"/>
+                    <f:validateLength minimum="8" maximum="8" />
+                    <f:validator validatorId="DniDuplicado"/>
+                </p:inputText>
+
+                <p:outputLabel value="Sexo" />
+                <p:selectOneRadio id="Sexo" value="#{usuarioC.usuarioDTO.SEXUSU}" unselectable="true">
+                    <f:selectItem itemLabel="Masculino" itemValue="M" />
+                    <f:selectItem itemLabel="Femenino" itemValue="F" />
+                </p:selectOneRadio>
+
+                <p:outputLabel value="Numero de Celular" />
+                <p:inputText  id="celular" required="true" maxlength="9" value="#{usuarioC.usuarioDTO.CELUSU}" label="NOMBRE REPETIDO" requiredMessage="Ingresar Nombre" style="width: 200px">
+                    <f:ajax event="keyup" execute="@this" delay="500"/>
+                    <p:keyFilter regEx="/[0-9]/"/>
+                    <f:validateLength minimum="9" maximum="9" />
+                    <f:validator validatorId="CelularDuplicado"/>
+                </p:inputText>
+
+            </p:panelGrid>
+            <p:commandButton value="Registrar" action="#{usuarioC.registrar()}" update="usuario:tablaUsu nombre area dni Sexo celular"/>
+        </h:form> 
+
+        <h:form id="usuario">
+            <p:dataTable var="car" id="tablaUsu" value="#{usuarioC.listUsuarioDTO}"
+                         rows="5" paginator="true" 
+                         widgetVar="busquedaPersona" emptyMessage="No se encontro registro"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+                         rowsPerPageTemplate="5,10,15,20">   
+                <f:facet name="header">
+                    <div style="float:right;padding-top: 5px;">
+                        <h:commandLink>
+                            <p:graphicImage url="../Imagenes/Excel.png" width="36"/>
+                            <p:dataExporter type="xls" target="tablaUsu" fileName="Area_Equipo" pageOnly="false"/>
+                        </h:commandLink>
+                        <h:commandLink>
+                            <p:graphicImage url="../Imagenes/pdf.png" width="36"/>
+                            <p:dataExporter type="pdf" target="tablaUsu" fileName="Area_Equipo" pageOnly="false" />
+                        </h:commandLink>
+                    </div>  
+                </f:facet>                      
+
+                <p:column headerText="Nombre">
+                    <h:outputText value="#{car.NOMUSU}" />
+                </p:column>   
+                <p:column headerText="Area">
+                    <h:outputText value="#{car.area}" />
+                </p:column>    
+                <p:column headerText="DNI">
+                    <h:outputText value="#{car.DNIUSU}"/>
+                </p:column> 
+                <p:column headerText="Sexo">
+                    <h:outputText value="#{car.SEXUSU}" >
+                        <f:converter converterId="sexoConverter"/>
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Celular">
+                    <h:outputText value="#{car.CELUSU}"/>
+                </p:column> 
+                <p:column headerText="Modificar">
+                    <p:commandButton value="Modificar" 
+                                     oncomplete="PF('wdlgDatos').show();" 
+                                     update=":frm">
+                        <f:setPropertyActionListener value="#{car}" target="#{usuarioC.seleccionado}"  />    
+                    </p:commandButton>   
+                </p:column>                    
+                <p:column headerText="Eliminar">
+                    <p:commandButton value="Eliminar" actionListener="#{usuarioC.modificarEstado(car.IDUSU)}" update="tablaUsu">                           
+                        <p:confirm header="Confirmación" message="¿Deseas Inactivar?" icon="ui-icon-alert"/>
+                        <p:tooltip trackMouse="true"/>
+                    </p:commandButton>
+                    <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                        <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                    </p:confirmDialog>
+                </p:column>
+                <f:facet name="footer">
+                    EN TOTAL HAY #{fn:length(usuarioC.listUsuarioDTO)} REGISTROS.
+                </f:facet>                   
+            </p:dataTable>                    
+        </h:form>
+        <p:dialog header="Datos de Usuario" widgetVar="wdlgDatos" id="dlgdatos">
+            <h:form id="frm">
+                <p:panelGrid columns="6">
+
+                    <p:outputLabel value="Nombre" />
+                    <p:inputText  id="nombre" required="true" maxlength="50" value="#{usuarioC.seleccionado.NOMUSU}" label="NOMBRE REPETIDO" requiredMessage="Ingresar Nombre" style="width: 200px">
+                        <f:ajax event="keyup" execute="@this" delay="500"/>
+                        <p:keyFilter regEx="/[A-Z_a-z_ñ_á_é_í_ó_ú_ ]/"/>
+                    </p:inputText>
+
+                    <p:outputLabel value="Area" />
+                    <p:selectOneMenu value="#{usuarioC.seleccionado.IDARE}"
+                                     filter="true" filterMatchMode="contains" required="true" requiredMessage="Falta Area" >
+                        <f:selectItem  noSelectionOption="true" itemLabel="Seleccione" itemValue="#{null}" />
+                        <f:selectItems value="#{areaC.listare}" var="area" itemValue="#{area.IDARE}"
+                                       itemLabel="#{area.NOMARE}"/>                                  
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value="DNI" />
+                    <p:inputText  id="dni" required="true" maxlength="8" value="#{usuarioC.seleccionado.DNIUSU}" label="NOMBRE REPETIDO" requiredMessage="Ingresar Nombre" style="width: 200px">
+                        <f:ajax event="keyup" execute="@this" delay="500"/>
+                        <p:keyFilter regEx="/[0-9]/"/>
+                        <f:validateLength minimum="8" maximum="8" />
+                    </p:inputText>
+
+                    <p:outputLabel value="Sexo" />
+                    <p:selectOneRadio id="xd" value="#{usuarioC.seleccionado.SEXUSU}" unselectable="true">
+                        <f:selectItem itemLabel="Masculino" itemValue="M" />
+                        <f:selectItem itemLabel="Femenino" itemValue="F" />
+                    </p:selectOneRadio>
+
+
+                    <p:outputLabel value="Numero de Celular" />
+                    <p:inputText  id="celular" required="true" maxlength="9" value="#{usuarioC.seleccionado.CELUSU}" label="NOMBRE REPETIDO" requiredMessage="Ingresar Nombre" style="width: 200px">
+                        <f:ajax event="keyup" execute="@this" delay="500"/>
+                        <p:keyFilter regEx="/[0-9]/"/>
+                        <f:validateLength minimum="9" maximum="9" />
+                    </p:inputText>
+
+                </p:panelGrid>
+                <p:commandButton value="Cancelar" immediate="true" />
+                <p:commandButton value="Modificar" actionListener="#{usuarioC.modificar()}"
+                                 update="usuario:tablaUsu" oncomplete="PF('wdlgDatos').hide();" >
+                    <p:confirm header="Confirmación" message="¿Deseas Modificar?" icon="ui-icon-alert"/>
+                    <p:tooltip trackMouse="true"/>
+                </p:commandButton>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                </p:confirmDialog>
+            </h:form>
+        </p:dialog>
+
+        <h:form id="form">
+            <center> <p:carousel value="${usuarioC.listUsuarioDTO}" headerText="DATOS DE USUARIOS" var="car" 
+                                 itemStyle="text-align:center" responsive="true" id="carousel">
+                    <p:panelGrid columns="2" style="width:100%;margin:10px 0px" id="panelcarousel"
+                                 columnClasses="label,value" layout="grid" styleClass="ui-panelgrid-blank">
+                        <h:outputText value="Nombre" />
+                        <h:outputText value="#{car.NOMUSU}" />
+
+                        <h:outputText value="Area" />
+                        <h:outputText value="#{car.area}" />
+
+                        <h:outputText value="Celular" />
+                        <h:outputText value="#{car.CELUSU}" />
+
+                    </p:panelGrid>    
+                </p:carousel> </center>
+        </h:form>
+
+    </h:body>
+</html>

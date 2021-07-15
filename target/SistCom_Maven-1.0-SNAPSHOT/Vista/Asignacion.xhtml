@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"    
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <h:head>
+        <title>Mantenimiento Asignacion</title>
+        <h:outputStylesheet name="primeicons/primeicons.css" library="primefaces" />
+    </h:head>
+    <h:body>
+
+        <p:growl id="mensaje" severity="info,fatal" showSummary="true" showDetail="true"/>
+        <p:menubar>
+            <p:menuitem value="Area" url="/SistCom_Maven/faces/Vista/Area.xhtml"/>
+            <p:menuitem value="Marca" url="/SistCom_Maven/faces/Vista/Marca.xhtml"/>
+            <p:menuitem value="Usuario" url="/SistCom_Maven/faces/Vista/Usuario.xhtml"/>
+            <p:menuitem value="Material" url="/SistCom_Maven/faces/Vista/Material.xhtml"/>
+            <p:menuitem value="Asignacion de Material" url="/SistCom_Maven/faces/Vista/Asignacion.xhtml"/>          
+            <p:menuitem value="Inventario" url="/SistCom_Maven/faces/Vista/Inventario.xhtml"/>
+        </p:menubar>
+        <h:form id="tablaAdq">
+            <p:panelGrid columns="2">
+                <p:outputLabel value="Usuario" />
+                <p:selectOneMenu id="usuario" value="#{asignacion_MaterialC.asignacionDTO.IDUSU}"
+                                 filter="true" filterMatchMode="contains" required="true" style="width: 200px" requiredMessage="Falta Proovedor" >
+                    <f:selectItem  noSelectionOption="true" itemLabel="Seleccione" itemValue="#{null}" />
+                    <f:selectItems value="#{usuarioC.listUsuarioDTO}" var="usu" itemValue="#{usu.IDUSU}"
+                                   itemLabel="#{usu.NOMUSU}"/>                                  
+                </p:selectOneMenu>
+
+                <p:outputLabel value="Material" />
+                <p:selectOneMenu id="material" value="#{asignacion_MaterialC.asignacionDTO.IDMAT}"
+                                 filter="true" filterMatchMode="contains" required="true" style="width: 200px" requiredMessage="Falta Proovedor" >
+                    <f:selectItem  noSelectionOption="true" itemLabel="Seleccione" itemValue="#{null}" />
+                    <f:selectItems value="#{materialC.listMaterialDTO}" var="ga" itemValue="#{ga.IDMAT}"
+                                   itemLabel="#{ga.NOMMAT}"/>                                  
+                </p:selectOneMenu>
+
+                <p:outputLabel value="Fecha de Asignacion" />
+                <p:calendar  placeholder="Ingrese fecha-adquisicion" mask="true" id="fecha"
+                             value="#{asignacion_MaterialC.asignacionDTO.FECASI}" locale="es"
+                             navigator="true" yearRange="c-100:c"  pattern="dd-MMM-yyyy"
+                             required="true" requiredMessage="Falta fecha de adquisicion"
+                             maxdate="today" showButtonPanel="true" />
+            </p:panelGrid>
+            <p:commandButton value="Registrar" action="#{asignacion_MaterialC.registrar()}" update="adquisicion:tablaAdq fecha usuario material"/>   
+        </h:form>
+
+        <h:form id="adquisicion">
+            <p:dataTable var="car" id="tablaAdq" value="#{asignacion_MaterialC.listAsignacionDTO}"
+                         rows="5" paginator="true" 
+                         widgetVar="busquedaPersona" emptyMessage="No se encontro registro"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+                         rowsPerPageTemplate="5,10,15,20"> 
+                <f:facet name="header">
+                    <div style="float:right;padding-top: 5px;">
+                        <h:commandLink>
+                            <p:graphicImage url="../Imagenes/Excel.png" width="30"/>
+                            <p:dataExporter type="xls" target="tablaMar" fileName="Area_Equipo" pageOnly="false"/>
+                        </h:commandLink>
+                        <h:commandLink>
+                            <p:graphicImage url="../Imagenes/pdf.png" width="30"/>
+                            <p:dataExporter type="pdf" target="tablaMar" fileName="Area_Equipo" pageOnly="false" />
+                        </h:commandLink>
+                    </div>  
+                </f:facet>
+                <p:column headerText="Usuario">
+                    <h:outputText value="#{car.usuario}" />
+                </p:column>
+                <p:column headerText="Material">
+                    <h:outputText value="#{car.material}"/>
+                </p:column>  
+                <p:column headerText="Fecha de Asignacion" style="width: 150px;">
+                    <h:outputText value="${car.FECASI}">
+                        <f:convertDateTime pattern="dd-MMM-yyyy" />
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Modificar">
+                    <p:commandButton icon="ui-icon-build" 
+                                     oncomplete="PF('wdlgDatos').show();" 
+                                     update=":frm">
+                        <f:setPropertyActionListener value="#{car}" target="#{asignacion_MaterialC.seleccionado}"  />    
+                    </p:commandButton>   
+                </p:column> 
+                <p:column headerText="Eliminar">
+                    <p:commandButton icon="ui-icon-circle-close" actionListener="#{asignacion_MaterialC.modificarEstado(car.IDASI)}" update="tablaAdq">                           
+                        <p:confirm header="Confirmación" message="¿Deseas Inactivar?" icon="ui-icon-alert"/>
+                        <p:tooltip trackMouse="true"/>
+                    </p:commandButton>
+                    <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                        <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                    </p:confirmDialog>
+                </p:column>
+                <f:facet name="footer">
+                    EN TOTAL HAY #{fn:length(asignacion_MaterialC.listAsignacionDTO)} REGISTROS.
+                </f:facet>                   
+            </p:dataTable>                    
+        </h:form>
+
+        <p:dialog header="Datos de Equipos" widgetVar="wdlgDatos" id="dlgdatos">
+            <h:form id="frm">
+                <p:panelGrid columns="6">
+                    <p:outputLabel value="Usuario" />
+                    <p:selectOneMenu value="#{asignacion_MaterialC.seleccionado.IDUSU}"
+                                     filter="true" filterMatchMode="contains" required="true" style="width: 200px" requiredMessage="Falta Proovedor" >
+                        <f:selectItem  noSelectionOption="true" itemLabel="Seleccione" itemValue="#{null}" />
+                        <f:selectItems value="#{usuarioC.listUsuarioDTO}" var="usu" itemValue="#{usu.IDUSU}"
+                                       itemLabel="#{usu.NOMUSU}"/>                                  
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value="Material" />
+                    <p:selectOneMenu value="#{asignacion_MaterialC.seleccionado.IDMAT}"
+                                     filter="true" filterMatchMode="contains" required="true" style="width: 200px" requiredMessage="Falta Proovedor" >
+                        <f:selectItem  noSelectionOption="true" itemLabel="Seleccione" itemValue="#{null}" />
+                        <f:selectItems value="#{materialC.listMaterialDTO}" var="ga" itemValue="#{ga.IDMAT}"
+                                       itemLabel="#{ga.NOMMAT}"/>                                  
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value="Fecha de Asignacion" />
+                    <p:calendar  placeholder="Ingrese fecha-adquisicion" mask="true" id="fecha"
+                                 value="#{asignacion_MaterialC.seleccionado.FECASI}" locale="es"
+                                 navigator="true" yearRange="c-100:c"  pattern="dd-MMM-yyyy"
+                                 required="true" requiredMessage="Falta fecha de adquisicion"
+                                 maxdate="today" showButtonPanel="true" />
+                </p:panelGrid>
+                <p:commandButton value="Cancelar" immediate="true" />
+                <p:commandButton value="Modificar" actionListener="#{asignacion_MaterialC.modificar()}"
+                                 update="adquisicion:tablaAdq" oncomplete="PF('wdlgDatos').hide();" >
+                    <p:confirm header="Confirmación" message="¿Deseas Modificar?" icon="ui-icon-alert"/>
+                    <p:tooltip trackMouse="true"/>
+                </p:commandButton>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                </p:confirmDialog>
+            </h:form>
+        </p:dialog>
+    </h:body>
+</html>
+

@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"    
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <h:head>
+        <title>Mantenimiento Marca</title>
+        <h:outputStylesheet name="primeicons/primeicons.css" library="primefaces" />
+    </h:head>
+    <h:body>
+        <p:growl id="mensaje" severity="info,fatal" showSummary="true" showDetail="true"/>
+        <p:menubar>
+            <p:menuitem value="Area" url="/SistCom_Maven/faces/Vista/Area.xhtml"/>
+            <p:menuitem value="Marca" url="/SistCom_Maven/faces/Vista/Marca.xhtml"/>
+            <p:menuitem value="Usuario" url="/SistCom_Maven/faces/Vista/Usuario.xhtml"/>
+            <p:menuitem value="Material" url="/SistCom_Maven/faces/Vista/Material.xhtml"/>
+            <p:menuitem value="Asignacion de Material" url="/SistCom_Maven/faces/Vista/Asignacion.xhtml"/>          
+            <p:menuitem value="Inventario" url="/SistCom_Maven/faces/Vista/Inventario.xhtml"/>
+        </p:menubar>
+
+        <h:form id="tablaAre">
+            <p:panelGrid columns="4">
+                <p:outputLabel value="Nombre" />
+                <p:inputText  id="nombre" required="true" maxlength="50" value="#{marcaC.marca.NOMMAR}" label="NOMBRE REPETIDO" requiredMessage="Ingresar Nombre" style="width: 200px">
+                    <f:ajax event="keyup" execute="@this" delay="500"/>
+                    <p:keyFilter  regEx="/[a-z- ]/i"/>
+                    <f:validator validatorId="MarcaDuplicada"/>
+                </p:inputText>
+            </p:panelGrid>
+            <p:commandButton value="Registrar" action="#{marcaC.registrar()}" update="marca:tablaMar nombre"/>
+        </h:form>
+
+        <h:form id="marca">
+            <p:dataTable var="car" id="tablaMar" value="#{marcaC.listamar}"
+                         rows="5" paginator="true" 
+                         widgetVar="busquedaPersona" emptyMessage="No se encontro registro"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+                         rowsPerPageTemplate="5,10,15,20">   
+                <f:facet name="header">
+                    <div style="float:right;padding-top: 5px;">
+
+                        <h:commandLink>
+                            <p:graphicImage url="../Imagenes/Excel.png" width="36"/>
+                            <p:dataExporter type="xls" target="tablaMar" fileName="Marca_Equipo" pageOnly="false"/>
+                        </h:commandLink>
+                    </div>  
+                </f:facet>
+                <p:column headerText="Nombre">
+                    <h:outputText value="#{car.NOMMAR}"/>
+                </p:column>        
+                <p:column headerText="Estado">
+                    <h:outputText value="#{car.ESTMAR}"/>
+                </p:column>   
+                <p:column headerText="Modificar">
+                    <p:commandButton icon="ui-icon-build" 
+                                     oncomplete="PF('wdlgDatos').show();" 
+                                     update=":frm">
+                        <f:setPropertyActionListener value="#{car}" target="#{marcaC.marca}" />    
+                    </p:commandButton>   
+                </p:column>                    
+                <p:column headerText="Eliminar">                        
+                    <p:commandButton icon="ui-icon-circle-close" actionListener="#{marcaC.modificarEstado(car)}" update="tablaMar">                           
+                        <p:confirm header="Confirmación" message="¿Deseas Inactivar?" icon="ui-icon-alert"/>
+                        <p:tooltip trackMouse="true"/>
+                    </p:commandButton>
+                    <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                        <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                    </p:confirmDialog>
+                </p:column>
+                <f:facet name="footer">
+                    EN TOTAL HAY #{fn:length(marcaC.listamar)} REGISTROS.
+                </f:facet>                   
+            </p:dataTable>                    
+        </h:form>
+
+        <p:dialog header="Datos de Marcas" widgetVar="wdlgDatos" id="dlgdatos">
+            <h:form id="frm">
+                <p:panelGrid columns="6">
+                    <p:outputLabel value="Nombre" />
+                    <p:inputText  id="nombre" required="true" maxlength="50" value="#{marcaC.marca.NOMMAR}" label="NOMBRE REPETIDO" requiredMessage="Ingresar Nombre" style="width: 200px">
+                        <f:ajax event="keyup" execute="@this" delay="500"/>
+                        <p:keyFilter  regEx="/[a-z- ]/i"/>
+                        <f:validator validatorId="MarcaDuplicada"/>
+                    </p:inputText>
+                </p:panelGrid>
+                <p:commandButton value="Cancelar" immediate="true" />
+                <p:commandButton value="Modificar" actionListener="#{marcaC.modificar()}"
+                                 update="marca:tablaMar" oncomplete="PF('wdlgDatos').hide();" >
+                    <p:confirm header="Confirmación" message="¿Deseas Modificar?" icon="ui-icon-alert"/>
+                    <p:tooltip trackMouse="true"/>
+                </p:commandButton>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                </p:confirmDialog>
+            </h:form>
+        </p:dialog>
+    </h:body>
+</html>
+

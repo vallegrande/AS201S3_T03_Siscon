@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"    
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+    <h:head>
+        <title>Mantenimiento Material</title>
+        <h:outputStylesheet name="primeicons/primeicons.css" library="primefaces" />
+    </h:head>
+    <h:body>
+        <p:growl id="mensaje" severity="info,fatal" showSummary="true" showDetail="true"/>
+        <p:menubar>
+            <p:menuitem value="Area" url="/SistCom_Maven/faces/Vista/Area.xhtml"/>
+            <p:menuitem value="Marca" url="/SistCom_Maven/faces/Vista/Marca.xhtml"/>
+            <p:menuitem value="Usuario" url="/SistCom_Maven/faces/Vista/Usuario.xhtml"/>
+            <p:menuitem value="Material" url="/SistCom_Maven/faces/Vista/Material.xhtml"/>
+            <p:menuitem value="Asignacion de Material" url="/SistCom_Maven/faces/Vista/Asignacion.xhtml"/>          
+            <p:menuitem value="Inventario" url="/SistCom_Maven/faces/Vista/Inventario.xhtml"/>
+        </p:menubar>
+
+        <h:form id="tablaAdq">
+            <p:panelGrid columns="6"> 
+                <p:outputLabel value="Marca" />
+                <p:selectOneMenu id="tipo" value="#{materialC.materialDTO.IDMAR}"
+                                 filter="true" filterMatchMode="contains" required="true" style="width: 200px" requiredMessage="Falta Proovedor" >
+                    <f:selectItem  noSelectionOption="true" itemLabel="Seleccione" itemValue="#{null}" />
+                    <f:selectItems value="#{marcaC.listamar}" var="tip" itemValue="#{tip.IDMAR}"
+                                   itemLabel="#{tip.NOMMAR}"/>                                  
+                </p:selectOneMenu>
+
+                <p:outputLabel value="Nombre del Material" />
+                <p:inputText id="nombre" value="#{materialC.materialDTO.NOMMAT}" maxlength="30" required="true" requiredMessage="Digitar el Modelo"/>
+
+                <p:outputLabel value = "Precio" for="txtCostoCom"/>
+                <p:inputText value ="${materialC.materialDTO.PREMAT}" required="true" id="txtCostoCom">
+                    <f:validateLength maximum="100"/>
+                    <p:keyFilter regEx="/[0-9]/i"/> 
+                </p:inputText>
+
+
+                <p:outputLabel value="Fecha de Compra" />
+                <p:calendar  placeholder="Ingrese fecha-compra" mask="true" id="fecha"
+                             value="#{materialC.materialDTO.FECCOM}" locale="es"
+                             navigator="true" yearRange="c-100:c"  pattern="dd-MMM-yyyy"
+                             required="true" requiredMessage="Falta fecha de compra"
+                             maxdate="today" showButtonPanel="true" />
+            </p:panelGrid>
+            <p:commandButton value="Registrar" action="#{materialC.registrar()}" update="adquisicion:tablaAdq tipo nombre txtCostoCom fecha"/> 
+        </h:form>
+
+        <h:form id="adquisicion">
+            <p:dataTable var="car" id="tablaAdq" value="#{materialC.listMaterialDTO}"
+                         rows="5" paginator="true" 
+                         widgetVar="busquedaPersona" emptyMessage="No se encontro registro"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+                         rowsPerPageTemplate="5,10,15,20">      
+                <f:facet name="header">
+                    <div style="float:right;padding-top: 5px;">
+                        <h:commandLink>
+                            <p:graphicImage url="../Imagenes/Excel.png" width="25"/>
+                            <p:dataExporter type="xls" target="tablaMar" fileName="Area_Equipo" pageOnly="false"/>
+                        </h:commandLink>
+                        <h:commandLink>
+                            <p:graphicImage url="../Imagenes/pdf.png" width="25"/>
+                            <p:dataExporter type="pdf" target="tablaMar" fileName="Area_Equipo" pageOnly="false" />
+                        </h:commandLink>
+                    </div>  
+                </f:facet>
+                <p:column headerText="Marca">
+                    <h:outputText value="#{car.marca}" />
+                </p:column>
+                <p:column headerText="Nombre del Material">
+                    <h:outputText value="#{car.NOMMAT}" />
+                </p:column>
+                <p:column headerText="Precio">
+                    <h:outputText value="#{car.PREMAT}" />
+                </p:column>
+                <p:column headerText="Fecha de Compra" style="width: 150px;">
+                    <h:outputText value="${car.FECCOM}">
+                        <f:convertDateTime pattern="dd-MMM-yyyy" />
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Modificar">
+                    <p:commandButton value="Modificar" 
+                                     oncomplete="PF('wdlgDatos').show();" 
+                                     update=":frm">
+                        <f:setPropertyActionListener value="#{car}" target="#{materialC.seleccionado}"  />    
+                    </p:commandButton>   
+                </p:column>                    
+                <p:column headerText="Eliminar">
+                    <p:commandButton value="Eliminar"  actionListener="#{materialC.modificarEstado(car.IDMAT)}" update="tablaAdq">                           
+                        <p:confirm header="Confirmación" message="¿Deseas Inactivar?" icon="ui-icon-alert"/>
+                        <p:tooltip trackMouse="true"/>
+                    </p:commandButton>
+                    <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                        <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                    </p:confirmDialog>
+                </p:column>
+
+                <f:facet name="footer">
+                    EN TOTAL HAY #{fn:length(materialC.listMaterialDTO)} REGISTROS.
+                </f:facet>                   
+            </p:dataTable>                    
+        </h:form>
+        <p:dialog header="Datos de Equipos" widgetVar="wdlgDatos" id="dlgdatos">
+            <h:form id="frm">
+                <p:panelGrid columns="6">
+
+                    <p:outputLabel value="Marca" />
+                    <p:selectOneMenu value="#{materialC.seleccionado.IDMAR}"
+                                     filter="true" filterMatchMode="contains" required="true" style="width: 200px" requiredMessage="Falta Proovedor" >
+                        <f:selectItem  noSelectionOption="true" itemLabel="Seleccione" itemValue="#{null}" />
+                        <f:selectItems value="#{marcaC.listamar}" var="marcas" itemValue="#{marcas.IDMAR}"
+                                       itemLabel="#{marcas.NOMMAR}"/>                                  
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value = "Precio" for="txtCostoCom"/>
+                    <p:inputText value ="${materialC.seleccionado.PREMAT}" required="true" id="txtCostoCom">
+                        <f:validateLength maximum="100"/>
+                        <p:keyFilter regEx="/[0-9]/i"/> 
+                    </p:inputText>
+
+                    <p:outputLabel value="Fecha de Compra" />
+                    <p:calendar  placeholder="Ingrese fecha-compra" mask="true" id="fecha"
+                                 value="#{materialC.seleccionado.FECCOM}" locale="es"
+                                 navigator="true" yearRange="c-100:c"  pattern="dd-MMM-yyyy"
+                                 required="true" requiredMessage="Falta fecha de compra"
+                                 maxdate="today" showButtonPanel="true" />
+
+                </p:panelGrid>
+                <p:commandButton value="Cancelar" immediate="true" />
+                <p:commandButton value="Modificar" actionListener="#{materialC.modificar()}"
+                                 update="adquisicion:tablaAdq" oncomplete="PF('wdlgDatos').hide();" >
+                    <p:confirm header="Confirmación" message="¿Deseas Modificar?" icon="ui-icon-alert"/>
+                    <p:tooltip trackMouse="true"/>
+                </p:commandButton>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                </p:confirmDialog>
+            </h:form>
+        </p:dialog>
+    </h:body>
+</html>
+
